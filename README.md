@@ -17,4 +17,11 @@ Los pasos seguidos serían:
 - Crear la carpeta del proyecto
 - Iniciar git, iniciar venv y meter .venv en el git ignore
 - Iniciamos el entorno virtual, instalamos Reflex e inicializamos toda su estructura
-- sincronizamos con github
+- Actualizamos .gitignore y sincronizamos con github
+- Reflex run y comienza la magia
+
+Estructura de carpetas:
+Empezamos con la estructura por defecto que crea reflex con algunas modificaciones:
+- Creamos tres carpetas: components, pages (donde irá el index) y styles
+
+
