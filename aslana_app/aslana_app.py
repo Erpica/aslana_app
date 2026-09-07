@@ -5,6 +5,8 @@ from datetime import datetime
 from fastapi import FastAPI, APIRouter
 from sqlmodel import select
 
+from aslana_app.admin import admin_page
+from aslana_app.pages.schedule_page import schedule_page
 from . import models
 from .pages.index import index
 from .models import ExtracurricularActivity
@@ -13,6 +15,8 @@ class State(rx.State):
     """The app state."""
 
 app = rx.App()
+
+# Página Principal
 app.add_page(
     index,
     route="/",
@@ -25,6 +29,19 @@ app.add_page(
         }
     ],
 )
+
+# Página de Administración
+app.add_page(
+    admin_page,
+    route="/admin",
+    title="Administración - Aslana",
+)
+
+# Página con la tabla de actividades semanal
+app.add_page(
+    schedule_page, 
+    route="/actividades"
+),
 
 # ------------------------------------------------------------------
 # Endpoints de FastAPI mediante APIRouter

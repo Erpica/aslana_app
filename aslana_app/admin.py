@@ -1,0 +1,144 @@
+import reflex as rx
+from aslana_app.state import ScheduleState
+
+def render_row(item: dict):
+    return rx.table.row(
+        rx.table.cell(item["activity_name"]),
+        rx.table.cell(item["child_name"]),
+        rx.table.cell(item["day_of_week"]),
+        rx.table.cell(f'{item["start_time"]} - {item["end_time"]}'),
+        rx.table.cell(
+            rx.hstack(
+                rx.button(
+                    "Editar", 
+                    size="1", 
+                    color_scheme="blue",
+                    on_click=lambda: ScheduleState.edit_activity(item)
+                ),
+                rx.button(
+                    "Eliminar", 
+                    size="1", 
+                    color_scheme="red",
+                    on_click=lambda: ScheduleState.delete_activity(item["id"])
+                ),
+                spacing="2",
+            )
+        ),
+    )
+
+def admin_page() -> rx.Component:
+    return rx.container(
+        rx.vstack(
+            # --- CABECERA CON TÍTULO Y LOGO REDIRIGIBLE ---
+            rx.hstack(
+                rx.heading("Gestión de Actividades", size="6"),
+                rx.link(
+                    rx.image(
+                        src="/aslana.png",
+                        alt="Logo Aslana",
+                        height="3em",
+                        cursor="pointer",
+                    ),
+                    href="/",
+                ),
+                justify="between",
+                align="center",
+                width="100%",
+            ),
+            
+            # --- FORMULARIO DE CREACIÓN / EDICIÓN ---
+            rx.card(
+                rx.vstack(
+                    rx.text(
+                        rx.cond(
+                            ScheduleState.form_id == None,
+                            "Añadir nueva actividad",
+                            "Editar actividad existente"
+                        ),
+                        weight="bold"
+                    ),
+                    rx.grid(
+                        rx.vstack(
+                            rx.text("Actividad:", size="2"),
+                            rx.input(
+                                value=ScheduleState.activity_name,
+                                on_change=ScheduleState.set_activity_name,
+                                placeholder="Ej: Guitarra",
+                            ),
+                        ),
+                        rx.vstack(
+                            rx.text("Alumno/a:", size="2"),
+                            rx.input(
+                                value=ScheduleState.child_name,
+                                on_change=ScheduleState.set_child_name,
+                                placeholder="Ej: Alex",
+                            ),
+                        ),
+                        rx.vstack(
+                            rx.text("Día:", size="2"),
+                            rx.select(
+                                ScheduleState.days,
+                                value=ScheduleState.day_of_week,
+                                on_change=ScheduleState.set_day_of_week,
+                            ),
+                        ),
+                        rx.vstack(
+                            rx.text("Hora inicio:", size="2"),
+                            rx.input(
+                                type="time",
+                                value=ScheduleState.start_time,
+                                on_change=ScheduleState.set_start_time,
+                            ),
+                        ),
+                        rx.vstack(
+                            rx.text("Hora fin:", size="2"),
+                            rx.input(
+                                type="time",
+                                value=ScheduleState.end_time,
+                                on_change=ScheduleState.set_end_time,
+                            ),
+                        ),
+                        columns="3",
+                        spacing="3",
+                        width="100%",
+                    ),
+                    rx.hstack(
+                        rx.button(
+                            rx.cond(ScheduleState.form_id == None, "Guardar", "Actualizar"),
+                            on_click=ScheduleState.save_activity,
+                            color_scheme="green",
+                        ),
+                        rx.cond(
+                            ScheduleState.form_id != None,
+                            rx.button("Cancelar", on_click=ScheduleState.reset_form, color_scheme="gray"),
+                        ),
+                        spacing="3",
+                    ),
+                    width="100%",
+                ),
+                width="100%",
+            ),
+
+            # --- TABLA DE ACTIVIDADES ---
+            rx.table.root(
+                rx.table.header(
+                    rx.table.row(
+                        rx.table.column_header_cell("Actividad"),
+                        rx.table.column_header_cell("Alumno/a"),
+                        rx.table.column_header_cell("Día"),
+                        rx.table.column_header_cell("Horario"),
+                        rx.table.column_header_cell("Acciones"),
+                    )
+                ),
+                rx.table.body(
+                    rx.foreach(ScheduleState.activities, render_row)
+                ),
+                width="100%",
+            ),
+            spacing="5",
+            padding="4",
+            width="100%",
+        ),
+        on_mount=ScheduleState.load_activities,
+        width="100%",
+    )

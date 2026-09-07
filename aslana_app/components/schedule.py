@@ -1,27 +1,30 @@
 import reflex as rx
 from aslana_app.state import ScheduleState
 
+def activity_card(item: dict) -> rx.Component:
+    return rx.card(
+        rx.vstack(
+            rx.text(item["activity_name"], weight="bold", size="2"),
+            rx.text("👦 ", item["child_name"], size="1", color_scheme="blue"),
+            rx.text("⏰ ", item["start_time"], " - ", item["end_time"], size="1", color="gray"),
+            spacing="1",
+            align="start",
+        ),
+        size="1",
+        color_scheme="teal",
+        variant="surface",
+        width="100%",
+        margin_bottom="2px",
+    )
+
 def activity_cell(day: str, time: str) -> rx.Component:
     return rx.box(
         rx.foreach(
             ScheduleState.activities,
             lambda item: rx.cond(
-                # CAMBIO AQUÍ: Usamos item["slot"] en lugar de item["start_time"]
                 (item["day_of_week"] == day) & (item["slot"] == time),
-                rx.card(
-                    rx.vstack(
-                        rx.text(item["activity_name"], weight="bold", size="2"),
-                        rx.text("👦 ", item["child_name"], size="1", color_scheme="blue"),
-                        # Mantenemos start_time y end_time reales en la tarjeta visual (16:45 - 17:15)
-                        rx.text("⏰ ", item["start_time"], " - ", item["end_time"], size="1", color="gray"),
-                        spacing="1",
-                        align="start",
-                    ),
-                    size="1",
-                    color_scheme="teal",
-                    variant="surface",
-                    width="100%",
-                ),
+                activity_card(item),
+                rx.fragment(),
             ),
         ),
         padding="1",
@@ -62,7 +65,7 @@ def schedule_table() -> rx.Component:
             width="100%",
             variant="surface",
         ),
+        
+        width="100%",
         on_mount=ScheduleState.seed_sample_data,
-        padding="4",
-        size="4",
     )

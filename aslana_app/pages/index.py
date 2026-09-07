@@ -3,7 +3,9 @@ from rxconfig import config
 from aslana_app.components.navbar import navbar
 from aslana_app.components.footer import footer
 from aslana_app.components.schedule import schedule_table
+from aslana_app.components.hero import hero
 from aslana_app.styles.styles import Color
+from aslana_app.state import ScheduleState
 
 
 def index() -> rx.Component:
@@ -12,7 +14,8 @@ def index() -> rx.Component:
         rx.vstack(
             navbar(),
             #rx.color_mode.button(position="top-right"), # Modo oscuro / claro
-            schedule_table(),
+            hero(),
+            #schedule_table(),
             footer(),
             
             spacing="6",             # <--- Controla el espacio vertical uniforme entre componentes
