@@ -1,30 +1,26 @@
 import reflex as rx
 from rxconfig import config
 from aslana_app.components.navbar import navbar
+from aslana_app.components.footer import footer
+from aslana_app.components.schedule import schedule_table
 from aslana_app.styles.styles import Color
 
 
 def index() -> rx.Component:
     # Welcome Page (Index)
     return rx.container(
-        navbar(),
-        rx.color_mode.button(position="top-right"),
         rx.vstack(
-            rx.heading("Welcome to Reflex!", size="9"),
-            rx.text(
-                "Get started by editing ",
-                rx.code(f"{config.app_name}/{config.app_name}.py"),
-                size="5",
-            ),
-            rx.link(
-                rx.button("Check out our docs!"),
-                href="https://reflex.dev/docs/getting-started/introduction/",
-                is_external=True,
-            ),
-            spacing="5",
-            justify="center",
-            min_height="85vh",
+            navbar(),
+            #rx.color_mode.button(position="top-right"), # Modo oscuro / claro
+            schedule_table(),
+            footer(),
             
+            spacing="6",             # <--- Controla el espacio vertical uniforme entre componentes
+            width="100%",
+            min_height="100vh",      # Para ocupar la altura completa de la pantalla
+            justify="between",       # Empuja el footer al fondo si hay poco contenido
         ),
-        bg_color=Color.VERY_LIGHT.value
+        bg_color=Color.VERY_LIGHT.value,
+        size="4",                    # <--- Opcional: Ancho amplio del contenedor de Radix
+        padding="4",
     )
