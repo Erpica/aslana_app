@@ -17,28 +17,47 @@ class Color(Enum):
     # Negro
     BLACK = "#000000"
 
+class Size(Enum):
+    pass
+
 # Fuentes
 FONT_REENIE_BEANIE = "Reenie Beanie"
 
 # Importación de Google Fonts
 GOOGLE_FONTS_LINK = '<link href="https://fonts.googleapis.com/css2?family=Reenie+Beanie&display=swap" rel="stylesheet">'
 
-# Estilos para los Post-its
+# Estilos para los Post-its (con textura de papel visible incorporada)
 POSTIT_STYLE = {
     "width": "11em",
     "height": "11em",
     "padding": "1em",
-    "box_shadow": "5px 5px 7px rgba(33, 33, 33, 0.4)",
-    "transition": "transform 0.15s linear, box-shadow 0.15s linear",
+    "box_shadow": "5px 5px 7px rgba(33,33,33,0.4), inset 0 -3px 10px rgba(0,0,0,0.06)",
+    "transition": "transform 0.15s ease-in-out, box-shadow 0.15s ease-in-out",
     "cursor": "pointer",
+    "position": "relative",
+    "background_image": """
+    repeating-linear-gradient(
+        45deg,
+        rgba(0,0,0,0.08) 0px,       # Antes 0.04 → más oscuro
+        rgba(0,0,0,0.08) 1px,
+        transparent 1px,
+        transparent 6px
+    ),
+    radial-gradient(rgba(0, 0, 0, 0.20) 2.5px, transparent 0),  # Antes 0.12 → más opaco
+    linear-gradient(180deg, rgba(255,255,255,0.35) 0%, rgba(0,0,0,0.10) 100%)
+    """,
+    "background_size": "8px 8px, 6px 6px, 100% 100%",
+    "background_blend_mode": "multiply, normal, normal",
+    "border": "1px solid rgba(200,200,200,0.3)",
+    "border_radius": "4px 12px 5px 12px",
     "_hover": {
-        "transform": "scale(1.2) rotate(0deg)",
-        "box_shadow": "10px 10px 12px rgba(0, 0, 0, 0.5)",
+        "transform": "scale(1.15) rotate(0deg) !important",
+        "box_shadow": "12px 12px 16px rgba(0,0,0,0.35), inset 0 -3px 12px rgba(0,0,0,0.08)",
         "z_index": "10",
     },
 }
 
-# Estilo de la superficie de fondo (Efecto Cuaderno / Tablero)
+# Estilo del Cuaderno (limpio, con su cuadrícula tradicional)
 BACKGROUND_NOTEBOOK_STYLE = {
     "background_color": "#fefefe",
     "background_image": """
@@ -52,4 +71,3 @@ BACKGROUND_NOTEBOOK_STYLE = {
     "box_shadow": "0 10px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.01)",
     "border": "1px solid #e5e7eb",
 }
-

@@ -1,6 +1,7 @@
 import reflex as rx
 import os
 
+# Usaremos sqlite (en lugar de Postgres ni MySQL)
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///reflex.db")
 
 config = rx.Config(

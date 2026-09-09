@@ -46,3 +46,7 @@ Empezamos con la estructura por defecto que crea reflex con algunas modificacion
     - Creación y registro del APIRouter() con los endpoints personalizados (/api/health, /api/activities, etc.).
     - Montaje de la app de FastAPI en el backend de Reflex (app._api.mount("/api", fastapi_app)).
 - pyproject.toml / uv.lock: Gestores de dependencias donde uv add fastapi registró la librería para el entorno virtual.
+
+
+## Tareas pendientes:
+- Usar Swagger (o Redoc)

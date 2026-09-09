@@ -1,4 +1,4 @@
-"""Welcome to Reflex! This file outlines the steps to create a basic app."""
+"""Aplicación web Aslana."""
 
 import reflex as rx
 from datetime import datetime

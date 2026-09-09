@@ -5,7 +5,10 @@ def render_row(item: dict):
     return rx.table.row(
         rx.table.cell(item["activity_name"]),
         rx.table.cell(item["child_name"]),
-        rx.table.cell(item["day_of_week"]),
+        rx.table.cell(
+            ", ".join(item["day_of_week"]) if isinstance(item["day_of_week"], list) else item["day_of_week"]
+        ),
+
         rx.table.cell(f'{item["start_time"]} - {item["end_time"]}'),
         rx.table.cell(
             rx.hstack(
@@ -75,13 +78,22 @@ def admin_page() -> rx.Component:
                             ),
                         ),
                         rx.vstack(
-                            rx.text("Día:", size="2"),
-                            rx.select(
+                            rx.text("Días:", size="2"),
+                            rx.foreach(
                                 ScheduleState.days,
-                                value=ScheduleState.day_of_week,
-                                on_change=ScheduleState.set_day_of_week,
+                                lambda day: rx.hstack(
+                                    rx.checkbox(
+                                        checked=ScheduleState.day_of_week.contains(day),
+                                        on_change=lambda checked, d=day: ScheduleState.toggle_day(d, checked),
+                                    ),
+                                    rx.text(day),
+                                    spacing="2",
+                                    align="center",
+                                )
                             ),
+                            spacing="2",
                         ),
+
                         rx.vstack(
                             rx.text("Hora inicio:", size="2"),
                             rx.input(

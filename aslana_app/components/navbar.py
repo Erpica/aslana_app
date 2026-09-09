@@ -5,10 +5,13 @@ from aslana_app.styles.styles import Color
 def navbar() -> rx.Component:
     return rx.box(
         rx.hstack(
-            rx.image(
-                src="aslana.png",
-                alt="Logo Aslana",
-                width="5em",
+            rx.link(
+                rx.image(
+                    src="aslana.png",
+                    alt="Logo Aslana",
+                    width="5em",
+                ),
+                href="/"
             ),
             rx.hstack(
                 navbar_link("Niños", ""),
