@@ -10,6 +10,7 @@ from aslana_app.pages.schedule_page import schedule_page
 from . import models
 from .pages.index import index
 from .models import ExtracurricularActivity
+import json
 
 class State(rx.State):
     """The app state."""
@@ -53,8 +54,15 @@ fastapi_app = FastAPI(
     docs_url="/docs",  # Exponer Swagger UI directamente en /api/docs
     openapi_url="/openapi.json"
 )
+# Podemos ver la documentación interactiva (Swagger UI) en: http://localhost:8000/api/docs
 
 api_router = APIRouter()
+
+@api_router.get("/")
+def home():
+    '''Ruta raíz de la api'''
+    return {"message": "Hola Pica"}
+# También de comprobación en http://localhost:8000/api/
 
 @api_router.get("/health")
 def api_health():
@@ -68,17 +76,35 @@ def get_all_activities():
         activities = session.exec(select(ExtracurricularActivity)).all()
         return activities
 
-@api_router.get("/activities/{child_name}")
-def get_activities_by_child(child_name: str):
-    """Filtra las actividades por el nombre del hijo/a."""
+@api_router.get("/activities")
+def get_all_activities():
+    """Devuelve todas las actividades almacenadas en SQLite con los días limpios y en lista."""
     with rx.session() as session:
-        statement = select(ExtracurricularActivity).where(
-            ExtracurricularActivity.child_name.ilike(child_name)
-        )
-        return session.exec(statement).all()
+        activities = session.exec(select(ExtracurricularActivity)).all()
+        formatted_list = []
+        
+        for item in activities:
+            # Convertimos el modelo de la BD a un diccionario de Python
+            data = item.model_dump()
+            raw_days = data.get("day_of_week")
+            
+            # Limpiamos y formateamos el campo day_of_week
+            if raw_days:
+                try:
+                    parsed = json.loads(raw_days)
+                    data["day_of_week"] = parsed if isinstance(parsed, list) else [str(parsed)]
+                except (json.JSONDecodeError, TypeError):
+                    data["day_of_week"] = [raw_days]
+            else:
+                data["day_of_week"] = []
+                
+            formatted_list.append(data)
+            
+        return formatted_list
 
 # 2. Incluir el router en la app de FastAPI
 fastapi_app.include_router(api_router)
 
 # 3. Montar la app de FastAPI en la app Starlette subyacente de Reflex bajo la ruta /api
 app._api.mount("/api", fastapi_app)
+

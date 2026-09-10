@@ -11,4 +11,5 @@ dependencies = [
     "aiosqlite>=0.22.1",
     "reflex[db]>=0.9.10.post1",
     "sqlmodel>=0.0.42",
+    "uvicorn>=0.52.4",
 ]
