@@ -1,5 +1,5 @@
 import reflex as rx
-from aslana_app.models import Child, ExtracurricularActivity, ChildActivityLink
+from aslana_app.backend.models import Child, ExtracurricularActivity, ChildActivityLink
 from sqlmodel import select
 import json
 from typing import List

@@ -55,6 +55,34 @@ Empezamos con la estructura por defecto que crea reflex con algunas modificacion
 - Swagger: `http://localhost:8000/docs`
 - Redoc: `http://localhost:8000/redoc`
 
+## 4- Progreso de reflex run:
+- Busca en la raíz rxconfig.py. En mi caso tengo:
+    ```import reflex as rx
+     config = rx.Config
+         app_name="aslana_app"
+         ```
+    Por eso busca aslana_app.py
+- busca un add_page de rx.App. Como lo tengo configurado así:
+    ```import reflex as rx
+    app = rx.App()
+    app.add_page(
+        index,
+        route="/",
+        title="Aslana",
+        image="/favicon.ico",
+        meta=[
+            {
+                "rel": "icon",
+                "href": "/favicon.ico",
+            }
+        ],
+    )```
+
+    pues me carga la función index en la raiz
+
+- Cada add_page registra una ruta.
+- Compila el frontend (crea la carpeta .web).
+- Levanta los servidores.
 
 ## Tareas pendientes:
 - Familiarizarme con

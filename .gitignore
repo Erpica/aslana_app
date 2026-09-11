@@ -1,3 +1,5 @@
+.web
+.states
 # Archivos de base de datos SQLite (¡NUNCA a GitHub!)
 *.db
 *.sqlite
