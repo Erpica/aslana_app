@@ -42,7 +42,7 @@ app.add_page(
 app.add_page(
     schedule_page, 
     route="/actividades"
-),
+)
 
 # ------------------------------------------------------------------
 # Endpoints de FastAPI mediante APIRouter
@@ -54,7 +54,11 @@ fastapi_app = FastAPI(
     docs_url="/docs",  # Exponer Swagger UI directamente en /api/docs
     openapi_url="/openapi.json"
 )
-# Podemos ver la documentación interactiva (Swagger UI) en: http://localhost:8000/api/docs
+
+# Ruta directa en la raíz del backend (http://localhost:8000/)
+@fastapi_app.get("/")
+async def root_directa():
+    return {"message": "Hola Pica"}
 
 api_router = APIRouter()
 
@@ -62,19 +66,11 @@ api_router = APIRouter()
 def home():
     '''Ruta raíz de la api'''
     return {"message": "Hola Pica"}
-# También de comprobación en http://localhost:8000/api/
 
 @api_router.get("/health")
 def api_health():
     """Endpoint básico de comprobación de estado."""
     return {"status": "ok", "timestamp": datetime.now().isoformat()}
-
-@api_router.get("/activities")
-def get_all_activities():
-    """Devuelve todas las actividades almacenadas en SQLite en formato JSON."""
-    with rx.session() as session:
-        activities = session.exec(select(ExtracurricularActivity)).all()
-        return activities
 
 @api_router.get("/activities")
 def get_all_activities():
@@ -84,11 +80,9 @@ def get_all_activities():
         formatted_list = []
         
         for item in activities:
-            # Convertimos el modelo de la BD a un diccionario de Python
             data = item.model_dump()
             raw_days = data.get("day_of_week")
             
-            # Limpiamos y formateamos el campo day_of_week
             if raw_days:
                 try:
                     parsed = json.loads(raw_days)
@@ -108,3 +102,5 @@ fastapi_app.include_router(api_router)
 # 3. Montar la app de FastAPI en la app Starlette subyacente de Reflex bajo la ruta /api
 app._api.mount("/api", fastapi_app)
 
+# Montar también el fastapi_app directamente en la raíz de Starlette para que responda en http://localhost:8000/
+app._api.mount("/", fastapi_app)

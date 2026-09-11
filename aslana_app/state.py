@@ -1,41 +1,48 @@
 import reflex as rx
-from aslana_app.models import ExtracurricularActivity
+from aslana_app.models import Child, ExtracurricularActivity, ChildActivityLink
 from sqlmodel import select
 import json
 from typing import List
 
-# Aquí irá el estado de la base de datos
+def format_list_py(items) -> str:
+    """Convierte una lista en un string con comas y 'y' antes del último elemento."""
+    if not items:
+        return ""
+    if isinstance(items, str):
+        try:
+            parsed = json.loads(items)
+            if isinstance(parsed, list):
+                items = parsed
+            else:
+                return items
+        except Exception:
+            return items
+            
+    if len(items) == 1:
+        return items[0]
+    elif len(items) == 2:
+        return f"{items[0]} y {items[1]}"
+    else:
+        return ", ".join(items[:-1]) + f" y {items[-1]}"
+
 
 class ScheduleState(rx.State):
     days: list[str] = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes"]
     activities: list[dict] = []
     
-    # Campos del formulario
+    # Lista de objetos niño desde la BD
+    available_children: list[dict] = []
+    new_child_input: str = "" 
+
     form_id: int | None = None
     activity_name: str = ""
-    child_name: str = ""
-    day_of_week: list[str] = ["Lunes"]
+    child_name: list[str] = []  
+    day_of_week: list[str] = []
     start_time: str = "17:00"
     end_time: str = "18:00"
 
-    # --- SETTERS EXPLÍCITOS ---
     def set_activity_name(self, value: str):
         self.activity_name = value
-
-    def set_child_name(self, value: str):
-        self.child_name = value
-
-    def set_day_of_week(self, value: list[str]):
-        self.day_of_week = value
-
-    def toggle_day(self, day: str, checked: bool):
-        """Añade o quita un día de la lista day_of_week."""
-        if checked:
-            if day not in self.day_of_week:
-                self.day_of_week.append(day)
-        else:
-            if day in self.day_of_week:
-                self.day_of_week.remove(day)
 
     def set_start_time(self, value: str):
         self.start_time = value
@@ -43,11 +50,77 @@ class ScheduleState(rx.State):
     def set_end_time(self, value: str):
         self.end_time = value
 
-    # --- MÉTODOS DE LÓGICA Y BD ---
+    def set_new_child_input(self, value: str):
+        self.new_child_input = value
+
+    def load_children(self):
+        """Carga los niños desde la base de datos."""
+        with rx.session() as session:
+            results = session.exec(select(Child)).all()
+            # Si no hay niños por defecto, creamos Anto y Alba
+            if not results:
+                default_children = [Child(name="Anto"), Child(name="Alba")]
+                session.add_all(default_children)
+                session.commit()
+                results = session.exec(select(Child)).all()
+            
+            self.available_children = [{"id": c.id, "name": c.name} for c in results]
+
+    def add_child_option(self):
+        """Añade un niño nuevo a la base de datos."""
+        name = self.new_child_input.strip()
+        if not name:
+            return
+            
+        with rx.session() as session:
+            existing = session.exec(select(Child).where(Child.name == name)).first()
+            if not existing:
+                new_c = Child(name=name)
+                session.add(new_c)
+                session.commit()
+                
+        self.new_child_input = ""
+        self.load_children()
+
+    def remove_child_option(self, child_dict: dict):
+        """Elimina un niño de la base de datos de forma permanente."""
+        try:
+            # Extraemos el id y el nombre de forma segura del diccionario
+            c_id = int(child_dict.get("id"))
+            c_name = child_dict.get("name")
+        except (TypeError, ValueError, AttributeError):
+            return
+
+        with rx.session() as session:
+            child = session.get(Child, c_id)
+            if child:
+                session.delete(child)
+                session.commit()
+                
+        if c_name and c_name in self.child_name:
+            self.child_name.remove(c_name)
+            
+        self.load_children()
+        self.load_activities()
+
+    def toggle_child(self, child: str, checked: bool):
+        if checked:
+            if child not in self.child_name:
+                self.child_name.append(child)
+        else:
+            if child in self.child_name:
+                self.child_name.remove(child)
+
+    def toggle_day(self, day: str, checked: bool):
+        if checked:
+            if day not in self.day_of_week:
+                self.day_of_week.append(day)
+        else:
+            if day in self.day_of_week:
+                self.day_of_week.remove(day)
+
     @rx.var
     def activities_by_day_and_time(self) -> dict[str, dict[str, list[dict]]]:
-        """Devuelve un diccionario: {día: {slot: [actividades]}} garantizando claves vacías"""
-        # Inicializa todos los días y slots con listas vacías
         result = {
             day: {slot: [] for slot in self.time_slots} 
             for day in self.days
@@ -61,15 +134,13 @@ class ScheduleState(rx.State):
 
         return result
 
-
     @rx.var
     def time_slots(self) -> list[str]:
         slots = []
-        for hour in range(16, 20):
+        for hour in range(16, 22):
             for minute in (0, 30):
                 slots.append(f"{hour:02d}:{minute:02d}")
         return slots
-
 
     def get_slot_for_time(self, time_str: str) -> str:
         try:
@@ -80,53 +151,48 @@ class ScheduleState(rx.State):
             return time_str
 
     def load_activities(self):
+        self.load_children()
         with rx.session() as session:
             results = session.exec(select(ExtracurricularActivity)).all()
             data = []
             for item in results:
-                activity_dict = item.model_dump()
-                activity_dict["slot"] = self.get_slot_for_time(item.start_time)
+                # Extraemos los datos de forma segura del modelo SQLModel
+                activity_dict = {
+                    "id": item.id,
+                    "activity_name": item.activity_name,
+                    "start_time": item.start_time,
+                    "end_time": item.end_time,
+                    "slot": self.get_slot_for_time(item.start_time)
+                }
                 
-                # Deserialización segura de day_of_week
+                # Deserialización y formato de child_name
+                raw_child = item.child_name
+                child_list = ["Anto"]
+                if raw_child:
+                    try:
+                        parsed_child = json.loads(raw_child)
+                        child_list = parsed_child if isinstance(parsed_child, list) else [str(parsed_child)]
+                    except (json.JSONDecodeError, TypeError):
+                        child_list = [raw_child]
+                activity_dict["child_name"] = child_list
+                activity_dict["child_formatted"] = format_list_py(child_list)
+
+                # Deserialización y formato de day_of_week
                 raw_day = item.day_of_week
+                day_list = ["Lunes"]
                 if raw_day:
                     try:
                         parsed_day = json.loads(raw_day)
-                        if isinstance(parsed_day, list):
-                            activity_dict["day_of_week"] = parsed_day
-                        else:
-                            activity_dict["day_of_week"] = [str(parsed_day)]
+                        day_list = parsed_day if isinstance(parsed_day, list) else [str(parsed_day)]
                     except (json.JSONDecodeError, TypeError):
-                        # Si no es un JSON válido (ej: "Lunes" guardado como texto plano)
-                        activity_dict["day_of_week"] = [raw_day]
-                else:
-                    activity_dict["day_of_week"] = ["Lunes"]
+                        day_list = [raw_day]
+                activity_dict["day_of_week"] = day_list
+                activity_dict["day_formatted"] = format_list_py(day_list)
 
                 data.append(activity_dict)
             self.activities = data
 
     def seed_sample_data(self):
-        with rx.session() as session:
-            existing = session.exec(select(ExtracurricularActivity)).all()
-            if not existing:
-                samples = [
-                    ExtracurricularActivity(
-                        activity_name="Música",
-                        child_name="Estudiante 1",
-                        day_of_week=json.dumps(["Lunes"]),  # <-- Serializado correctamente
-                        start_time="16:30",
-                        end_time="17:30",
-                    ),
-                    ExtracurricularActivity(
-                        activity_name="Baloncesto",
-                        child_name="Estudiante 2",
-                        day_of_week=json.dumps(["Lunes"]),  # <-- Serializado correctamente
-                        start_time="17:30",
-                        end_time="18:30",
-                    ),
-                ]
-                session.add_all(samples)
-                session.commit()
         self.load_activities()
 
     def save_activity(self):
@@ -138,7 +204,7 @@ class ScheduleState(rx.State):
                 item = session.get(ExtracurricularActivity, self.form_id)
                 if item:
                     item.activity_name = self.activity_name
-                    item.child_name = self.child_name
+                    item.child_name = json.dumps(self.child_name)
                     item.day_of_week = json.dumps(self.day_of_week)
                     item.start_time = self.start_time
                     item.end_time = self.end_time
@@ -146,7 +212,7 @@ class ScheduleState(rx.State):
             else:
                 new_item = ExtracurricularActivity(
                     activity_name=self.activity_name,
-                    child_name=self.child_name,
+                    child_name=json.dumps(self.child_name),
                     day_of_week=json.dumps(self.day_of_week),
                     start_time=self.start_time,
                     end_time=self.end_time,
@@ -160,9 +226,13 @@ class ScheduleState(rx.State):
     def edit_activity(self, activity: dict):
         self.form_id = activity.get("id")
         self.activity_name = activity.get("activity_name", "")
-        self.child_name = activity.get("child_name", "")
+        
+        c_name = activity.get("child_name", ["Anto"])
+        self.child_name = c_name if isinstance(c_name, list) else [c_name]
+        
         dow = activity.get("day_of_week", ["Lunes"])
         self.day_of_week = dow if isinstance(dow, list) else [dow]
+        
         self.start_time = activity.get("start_time", "17:00")
         self.end_time = activity.get("end_time", "18:00")
 
@@ -177,11 +247,7 @@ class ScheduleState(rx.State):
     def reset_form(self):
         self.form_id = None
         self.activity_name = ""
-        self.child_name = ""
-        self.day_of_week = ["Lunes"]
+        self.child_name = []
+        self.day_of_week = []
         self.start_time = "17:00"
         self.end_time = "18:00"
-
-        
-
-

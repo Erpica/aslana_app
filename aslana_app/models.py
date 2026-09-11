@@ -1,13 +1,18 @@
-from typing import Optional
-from sqlmodel import Field, SQLModel, Column, TEXT
-import json
+import reflex as rx
+from sqlmodel import Field, SQLModel
 
-# Aquí irá el modelo de la base de datos
+class ChildActivityLink(SQLModel, table=True):
+    child_id: int | None = Field(default=None, foreign_key="child.id", primary_key=True)
+    activity_id: int | None = Field(default=None, foreign_key="extracurricularactivity.id", primary_key=True)
+
+class Child(SQLModel, table=True):
+    id: int | None = Field(default=None, primary_key=True)
+    name: str = Field(index=True, unique=True)
 
 class ExtracurricularActivity(SQLModel, table=True):
-    id: Optional[int] = Field(default=None, primary_key=True)
+    id: int | None = Field(default=None, primary_key=True)
     activity_name: str
-    child_name: str
-    day_of_week: str = Field(default="[]", sa_column=Column(TEXT))  # JSON serializado   # "Lunes", "Martes", "Miércoles", "Jueves", "Viernes"
-    start_time: str    # Ej: "16:00"
-    end_time: str      # Ej: "16:45"
+    child_name: str = Field(default="[]")  # Guardado como string JSON para la multiselección
+    day_of_week: str = Field(default="[]")  # Guardado como string JSON para los días
+    start_time: str
+    end_time: str

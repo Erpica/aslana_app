@@ -14,6 +14,10 @@ El stack tenológico será (03/09/2026 - `datetime.date.today()` XD):
 - fastapi 0.141.1
     - starlette 1.6.0
     - granian 2.8.2
+- Interfaces gráficas de lectura de la estructura de la API:
+    - Swagger
+    - Redoc
+- Postman 1.19.1 (como complemento de VSCode)
 
 Los pasos seguidos serían:
 
@@ -47,6 +51,14 @@ Empezamos con la estructura por defecto que crea reflex con algunas modificacion
     - Montaje de la app de FastAPI en el backend de Reflex (app._api.mount("/api", fastapi_app)).
 - pyproject.toml / uv.lock: Gestores de dependencias donde uv add fastapi registró la librería para el entorno virtual.
 
+## 3- Endpoints
+- Swagger: `http://localhost:8000/docs`
+- Redoc: `http://localhost:8000/redoc`
+
 
 ## Tareas pendientes:
-- Usar Swagger (o Redoc)
+- Familiarizarme con
+    - Swagger (o Redoc)
+    - Postman
+
+- Ver la clase principal de Pydantic: basemodel (validación y conversión automática)

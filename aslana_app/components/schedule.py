@@ -6,7 +6,7 @@ def activity_card(item: dict) -> rx.Component:
     return rx.card(
         rx.vstack(
             rx.text(item["activity_name"], weight="bold", size="2"),
-            rx.text("👦 ", item["child_name"], size="1", color_scheme="blue"),
+            rx.text("👦 ", item["child_formatted"], size="1", color_scheme="blue"),
             rx.text("⏰ ", item["start_time"], " - ", item["end_time"], size="1", color="gray"),
             spacing="1",
             align="start",

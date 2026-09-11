@@ -4,11 +4,8 @@ from aslana_app.state import ScheduleState
 def render_row(item: dict):
     return rx.table.row(
         rx.table.cell(item["activity_name"]),
-        rx.table.cell(item["child_name"]),
-        rx.table.cell(
-            ", ".join(item["day_of_week"]) if isinstance(item["day_of_week"], list) else item["day_of_week"]
-        ),
-
+        rx.table.cell(item["child_formatted"]),
+        rx.table.cell(item["day_formatted"]),
         rx.table.cell(f'{item["start_time"]} - {item["end_time"]}'),
         rx.table.cell(
             rx.hstack(
@@ -69,13 +66,52 @@ def admin_page() -> rx.Component:
                                 placeholder="Ej: Guitarra",
                             ),
                         ),
+                        # --- SECCIÓN DE ALUMNO/A CON CHECKBOXES, ELIMINAR Y AÑADIR ---
                         rx.vstack(
                             rx.text("Alumno/a:", size="2"),
-                            rx.input(
-                                value=ScheduleState.child_name,
-                                on_change=ScheduleState.set_child_name,
-                                placeholder="Ej: Alex",
+                            rx.vstack(
+                                rx.foreach(
+                                    ScheduleState.available_children,
+                                    lambda child_dict: rx.hstack(
+                                        rx.checkbox(
+                                            checked=ScheduleState.child_name.contains(child_dict["name"]),
+                                            on_change=lambda checked, name=child_dict["name"]: ScheduleState.toggle_child(name, checked),
+                                        ),
+                                        rx.text(child_dict["name"], size="2"),
+                                        rx.spacer(),
+                                        rx.button(
+                                            "✕",
+                                            size="1",
+                                            color_scheme="red",
+                                            variant="ghost",
+                                            on_click=lambda: ScheduleState.remove_child_option(child_dict),
+                                        ),
+                                        spacing="2",
+                                        align="center",
+                                        width="100%",
+                                    )
+                                ),
+                                spacing="2",
+                                width="100%",
                             ),
+                            # Input y botón para añadir un nuevo niño a la base de datos
+                            rx.hstack(
+                                rx.input(
+                                    placeholder="Nuevo niño...",
+                                    value=ScheduleState.new_child_input,
+                                    on_change=ScheduleState.set_new_child_input,
+                                    size="1",
+                                ),
+                                rx.button(
+                                    "Añadir niño",
+                                    size="1",
+                                    color_scheme="gray",
+                                    on_click=ScheduleState.add_child_option,
+                                ),
+                                spacing="2",
+                                width="100%",
+                            ),
+                            spacing="2",
                         ),
                         rx.vstack(
                             rx.text("Días:", size="2"),
