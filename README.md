@@ -12,16 +12,17 @@ El stack tenológico será (03/09/2026 - `datetime.date.today()` XD):
 - git version 2.55.0
 - uv 0.12.9
 - fastapi 0.141.1
-    - starlette 1.6.0
-    - granian 2.8.2
+  - starlette 1.6.0
+  - granian 2.8.2
 - Interfaces gráficas de lectura de la estructura de la API:
-    - Swagger
-    - Redoc
+  - Swagger
+  - Redoc
 - Postman 1.19.1 (como complemento de VSCode)
 
 Los pasos seguidos serían:
 
-## 1- Frontend
+## 1- Frontend (Reflex)
+
 - Crear la carpeta del proyecto
 - Iniciar git, iniciar venv y meter .venv en el git ignore
 - Iniciamos el entorno virtual, instalamos Reflex e inicializamos toda su estructura
@@ -30,63 +31,98 @@ Los pasos seguidos serían:
 - Para la instalación de paquetes iniciamos uv con `uv init`
 
 ## 2- Backend y base de datos:
+
 - reflex db init
 - reflex db makemigrations
 
-
 Estructura de carpetas:
 Empezamos con la estructura por defecto que crea reflex con algunas modificaciones:
+
 - Creamos tres carpetas: components, pages (donde irá el index) y styles
 - Al crear la base de datos se crea la carpeta alembic y dentro:
-    - env.py: Script de entorno que conecta SQLModel con Alembic para leer las tablas de la base de datos.
-    - script.py.mako: Plantilla utilizada por Alembic para estructurar los archivos de migración automáticos.
-    - versions/: Directorio donde se guardan los historiales de cambios del esquema.
-    - e5ceb44accee_.py: Archivo de migración específico generado tras ejecutar reflex db makemigrations. Contiene las instrucciones SQL (DDL) para crear las tablas en SQLite.
+  - env.py: Script de entorno que conecta SQLModel con Alembic para leer las tablas de la base de datos.
+  - script.py.mako: Plantilla utilizada por Alembic para estructurar los archivos de migración automáticos.
+  - versions/: Directorio donde se guardan los historiales de cambios del esquema.
+  - e5ceb44accee_.py: Archivo de migración específico generado tras ejecutar reflex db makemigrations. Contiene las instrucciones SQL (DDL) para crear las tablas en SQLite.
 - alembic.ini: Archivo de configuración interna de Alembic (rutas de migración, formato de logs, etc.).
 - reflex.db: La base de datos SQLite activa por defecto de Reflex.
 - models.py: Creado manualmente para definir las tablas de la base de datos utilizando rx.Model.
 - en aslana.py:
-    - Instanciación de fastapi_app = FastAPI(...).
-    - Creación y registro del APIRouter() con los endpoints personalizados (/api/health, /api/activities, etc.).
-    - Montaje de la app de FastAPI en el backend de Reflex (app._api.mount("/api", fastapi_app)).
+  - Instanciación de fastapi_app = FastAPI(...).
+  - Creación y registro del APIRouter() con los endpoints personalizados (/api/health, /api/activities, etc.).
+  - Montaje de la app de FastAPI en el backend de Reflex (app._api.mount("/api", fastapi_app)).
 - pyproject.toml / uv.lock: Gestores de dependencias donde uv add fastapi registró la librería para el entorno virtual.
 
 ## 3- Endpoints
+
 - Swagger: `http://localhost:8000/docs`
 - Redoc: `http://localhost:8000/redoc`
 
-## 4- Progreso de reflex run:
+## 4- FastAPI
+- routers
+- enpoints
+
+## 5- Progreso de reflex run:
+
 - Busca en la raíz rxconfig.py. En mi caso tengo:
-    ```import reflex as rx
-     config = rx.Config
-         app_name="aslana_app"
-         ```
-    Por eso busca aslana_app.py
+
+  ```import
+   config = rx.Config
+       app_name="aslana_app"
+       ```
+  Por eso busca aslana_app.py
+  ```
 - busca un add_page de rx.App. Como lo tengo configurado así:
-    ```import reflex as rx
-    app = rx.App()
-    app.add_page(
-        index,
-        route="/",
-        title="Aslana",
-        image="/favicon.ico",
-        meta=[
-            {
-                "rel": "icon",
-                "href": "/favicon.ico",
-            }
-        ],
-    )```
 
-    pues me carga la función index en la raiz
+  ```import
+  app = rx.App()
+  app.add_page(
+      index,
+      route="/",
+      title="Aslana",
+      image="/favicon.ico",
+      meta=[
+          {
+              "rel": "icon",
+              "href": "/favicon.ico",
+          }
+      ],
+  )```
 
+  pues me carga la función index en la raiz
+  ```
 - Cada add_page registra una ruta.
 - Compila el frontend (crea la carpeta .web).
+- Backend:
+
+  - Busca en rxconfig.py:
+    - La línea `db_url=DATABASE_URL`
+    - La lista de plugins
+  - En aslana_app.py importamos la app fastapi:
+    `#from aslana_app.backend.api import fastapi_app`:
+  - En este caso tenemos en api.py:
+    ```
+    from fastapi import FastAPI, APIRouter
+    # Interfaz Swagger UI
+    fastapi_app = FastAPI()
+
+    @fastapi_app.get("/")
+    async def root_directa():
+        return {"message": "Hola Pica"}
+
+    api_router = APIRouter()
+    ```
 - Levanta los servidores.
 
-## Tareas pendientes:
-- Familiarizarme con
-    - Swagger (o Redoc)
-    - Postman
+## Notas varias:
 
+- Para hacer un tree sin "archivos basura" podemos ejecutar:
+  `tree -I "__pycache__|*.pyc|.git|.venv|node_modules"`
+
+## Tareas pendientes:
+
+- Familiarizarme con
+
+  - Swagger (o Redoc)
+  - Postman
 - Ver la clase principal de Pydantic: basemodel (validación y conversión automática)

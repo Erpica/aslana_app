@@ -4,6 +4,9 @@ from fastapi import FastAPI, APIRouter
 from sqlmodel import select
 import reflex as rx
 from .models import ExtracurricularActivity
+from aslana_app.backend.routers import prueba
+from fastapi import FastAPI
+
 
 # Interfaz Swagger UI
 fastapi_app = FastAPI(
@@ -17,6 +20,8 @@ async def root_directa():
     return {"message": "Hola Pica"} """
 
 api_router = APIRouter()
+fastapi_app.include_router(prueba.router_app)
+
 
 """ @api_router.get("/")
 def home():
