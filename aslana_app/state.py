@@ -137,9 +137,15 @@ class ScheduleState(rx.State):
     @rx.var
     def time_slots(self) -> list[str]:
         slots = []
-        for hour in range(16, 22):
+        for hour in range(15, 22):
             for minute in (0, 30):
                 slots.append(f"{hour:02d}:{minute:02d}")
+
+        # Ocultar 15:00 si ninguna actividad cae en ese tramo
+        has_1500_activity = any(item.get("slot") == "15:00" for item in self.activities)
+        if not has_1500_activity and slots and slots[0] == "15:00":
+            slots.pop(0)
+
         return slots
 
     def get_slot_for_time(self, time_str: str) -> str:

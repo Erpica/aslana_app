@@ -3,30 +3,27 @@ from datetime import datetime
 from fastapi import FastAPI, APIRouter
 from sqlmodel import select
 import reflex as rx
-from .models import ExtracurricularActivity
+from aslana_app.backend.models import ExtracurricularActivity
 from aslana_app.backend.routers import prueba
-from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
 
-
-# Interfaz Swagger UI
+# Instanciamos FastAPI. Interfaz Swagger UI.
 fastapi_app = FastAPI(
     title="API Aslana",
     docs_url="/docs",
-    openapi_url="/openapi.json"
+    openapi_url="/openapi.json",
+    openapi_tags=[
+        {"name": "Api del proyecto", "description": "Endpoints de la API principal de Aslana."},
+        {"name": "Pruebas", "description": "Endpoints de prueba y desarrollo."},
+    ],
 )
 
-""" @fastapi_app.get("/")
-async def root_directa():
-    return {"message": "Hola Pica"} """
+api_router = APIRouter(tags=["Api del proyecto"])
 
-api_router = APIRouter()
-fastapi_app.include_router(prueba.router_app)
+#Ejemplo para ver una imagen desde el 8000: http://localhost:8000/images/foto_programar.png
+#fastapi_app.mount("/images", StaticFiles(directory="assets/images"), name="static")
 
 
-""" @api_router.get("/")
-def home():
-    '''Ruta raíz de la api'''
-    return {"message": "Hola Pica"} """
 
 @api_router.get("/health")
 def api_health():
@@ -58,3 +55,4 @@ def get_all_activities():
         return formatted_list
 
 fastapi_app.include_router(api_router)
+fastapi_app.include_router(prueba.router_app)

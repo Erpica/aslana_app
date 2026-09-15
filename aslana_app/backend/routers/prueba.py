@@ -1,7 +1,22 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, FastAPI
 from pydantic import BaseModel
 
-router_app = APIRouter()
+# -------------------------------
+# Router de pruebas
+# -------------------------------
+router_app = APIRouter(tags=["Pruebas"])
+
+# -------------------------------
+# API de pruebas completa
+# -------------------------------
+test_api_app = FastAPI(
+    title="API de Pruebas Aslana",
+    docs_url="/docs",
+    openapi_url="/openapi.json",
+    openapi_tags=[
+        {"name": "Pruebas", "description": "Endpoints de prueba y desarrollo."}
+    ],
+)
 
 # Entidad user:
 class User(BaseModel):
@@ -14,12 +29,6 @@ class User(BaseModel):
 users_list = [User(id = 1, name = "Anto", surname = "Pica", url = "er.pica", age = 35),
              User(id = 2, name = "Ire",  surname = "Somé", url = "ire.som", age = 45),
              User(id = 3, name = "Paco",  surname = "Erpaco", url = "er.paco", age = 40)]
-
-'''@router_app.get("/")
-async def users():
-    return "Esto es un mensaje de prueba"
-'''
-
 
 @router_app.get("/usersjson")
 async def usersjson():
@@ -34,7 +43,7 @@ async def users():
 
 @router_app.get("/user/{id}")
 def search_user(id: int):
-    users = filter (lambda user: user.id == id, users_list)
+    users = filter(lambda user: user.id == id, users_list)
     try:
         return list(users)[0]
     except:

@@ -1,12 +1,7 @@
-import sys
-from pathlib import Path
 import os
 import reflex as rx
 
-# Registrar la raíz del proyecto para localizar el paquete 'backend'
-sys.path.append(str(Path(__file__).parent.resolve()))
-
-# Usaremos sqlite (en lugar de Postgres ni MySQL)
+# Usaremos sqlite si no hay variable de entorno "DATABASE_URL" (en lugar de Postgres ni MySQL)
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///reflex.db")
 
 config = rx.Config(

@@ -38,14 +38,14 @@ Los pasos seguidos serían:
 Estructura de carpetas:
 Empezamos con la estructura por defecto que crea reflex con algunas modificaciones:
 
-- Creamos tres carpetas: components, pages (donde irá el index) y styles
+- Creamos tres carpetas: components, pages (donde irá el index), styles y routers (donde irán las rutas del backend)
 - Al crear la base de datos se crea la carpeta alembic y dentro:
   - env.py: Script de entorno que conecta SQLModel con Alembic para leer las tablas de la base de datos.
   - script.py.mako: Plantilla utilizada por Alembic para estructurar los archivos de migración automáticos.
   - versions/: Directorio donde se guardan los historiales de cambios del esquema.
   - e5ceb44accee_.py: Archivo de migración específico generado tras ejecutar reflex db makemigrations. Contiene las instrucciones SQL (DDL) para crear las tablas en SQLite.
 - alembic.ini: Archivo de configuración interna de Alembic (rutas de migración, formato de logs, etc.).
-- reflex.db: La base de datos SQLite activa por defecto de Reflex.
+- reflex.db: La base de datos SQLite activa por defecto de Reflex (al .gitignore).
 - models.py: Creado manualmente para definir las tablas de la base de datos utilizando rx.Model.
 - en aslana.py:
   - Instanciación de fastapi_app = FastAPI(...).
@@ -59,59 +59,57 @@ Empezamos con la estructura por defecto que crea reflex con algunas modificacion
 - Redoc: `http://localhost:8000/redoc`
 
 ## 4- FastAPI
+
 - routers
 - enpoints
 
 ## 5- Progreso de reflex run:
 
-- Busca en la raíz rxconfig.py. En mi caso tengo:
+### Frontend
 
+- Busca en la raíz rxconfig.py. En mi caso tengo:
   ```import
    config = rx.Config
        app_name="aslana_app"
-       ```
-  Por eso busca aslana_app.py
+       db_url="sqlite:///reflex.db"
   ```
-- busca un add_page de rx.App. Como lo tengo configurado así:
-
+- Busca aslana_app.py un add_page de rx.App. Como lo tengo configurado así:
   ```import
   app = rx.App()
   app.add_page(
       index,
-      route="/",
-      title="Aslana",
-      image="/favicon.ico",
-      meta=[
-          {
-              "rel": "icon",
-              "href": "/favicon.ico",
-          }
-      ],
   )```
-
-  pues me carga la función index en la raiz
   ```
 - Cada add_page registra una ruta.
 - Compila el frontend (crea la carpeta .web).
-- Backend:
 
-  - Busca en rxconfig.py:
-    - La línea `db_url=DATABASE_URL`
-    - La lista de plugins
-  - En aslana_app.py importamos la app fastapi:
-    `#from aslana_app.backend.api import fastapi_app`:
-  - En este caso tenemos en api.py:
-    ```
-    from fastapi import FastAPI, APIRouter
-    # Interfaz Swagger UI
-    fastapi_app = FastAPI()
+### Backend:
 
-    @fastapi_app.get("/")
-    async def root_directa():
-        return {"message": "Hola Pica"}
+- Busca en rxconfig.py:
+  - La línea `db_url=DATABASE_URL`
+  - La lista de plugins
 
-    api_router = APIRouter()
-    ```
+```
+  DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///reflex.db")
+  config = rx.Config(
+    app_name="aslana_app",
+    db_url=DATABASE_URL,
+    api_docs=True,
+```
+
+- En aslana_app.py importamos la app fastapi:
+  `from aslana_app.backend.api import fastapi_app, APIRouter`
+- En este caso tenemos en api.py:
+
+  ```
+  from fastapi import FastAPI, APIRouter
+  # Interfaz Swagger UI
+  fastapi_app = FastAPI(...)
+
+  @api_router.get("/health") con la función def api_health...
+  ```
+
+  accesible en `http://localhost:8000/health`
 - Levanta los servidores.
 
 ## Notas varias:
