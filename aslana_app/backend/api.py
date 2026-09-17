@@ -4,7 +4,7 @@ from fastapi import FastAPI, APIRouter
 from sqlmodel import select
 import reflex as rx
 from aslana_app.backend.models import ExtracurricularActivity
-from aslana_app.backend.routers import prueba
+from aslana_app.backend.routers import prueba, basic_auth_users, jwt_auth_users, users_db
 from fastapi.staticfiles import StaticFiles
 
 # Instanciamos FastAPI. Interfaz Swagger UI.
@@ -12,10 +12,7 @@ fastapi_app = FastAPI(
     title="API Aslana",
     docs_url="/docs",
     openapi_url="/openapi.json",
-    openapi_tags=[
-        {"name": "Api del proyecto", "description": "Endpoints de la API principal de Aslana."},
-        {"name": "Pruebas", "description": "Endpoints de prueba y desarrollo."},
-    ],
+
 )
 
 api_router = APIRouter(tags=["Api del proyecto"])
@@ -54,5 +51,10 @@ def get_all_activities():
             
         return formatted_list
 
+
+
+fastapi_app.include_router(basic_auth_users.router_app)
+fastapi_app.include_router(jwt_auth_users.api_router)
 fastapi_app.include_router(api_router)
-fastapi_app.include_router(prueba.router_app)
+#fastapi_app.include_router(prueba.router_app)
+fastapi_app.include_router(users_db.router_app)

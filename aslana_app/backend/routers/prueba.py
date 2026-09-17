@@ -9,14 +9,14 @@ router_app = APIRouter(tags=["Pruebas"])
 # -------------------------------
 # API de pruebas completa
 # -------------------------------
-test_api_app = FastAPI(
+""" test_api_app = FastAPI(
     title="API de Pruebas Aslana",
     docs_url="/docs",
     openapi_url="/openapi.json",
     openapi_tags=[
         {"name": "Pruebas", "description": "Endpoints de prueba y desarrollo."}
     ],
-)
+) """
 
 # Entidad user:
 class User(BaseModel):

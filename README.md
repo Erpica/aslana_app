@@ -18,6 +18,8 @@ El stack tenológico será (03/09/2026 - `datetime.date.today()` XD):
   - Swagger
   - Redoc
 - Postman 1.19.1 (como complemento de VSCode)
+- MongoDB version v8.0.32 en la nube de AWS ([cloud.mongodb.com](https://cloud.mongodb.com/))
+- Añadimos un .env para credenciales y lo metemos en .gitignore antes de sincronizar con github
 
 Los pasos seguidos serían:
 
@@ -91,19 +93,20 @@ Empezamos con la estructura por defecto que crea reflex con algunas modificacion
 
 ```
   DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///reflex.db")
-  config = rx.Config(
-    app_name="aslana_app",
-    db_url=DATABASE_URL,
-    api_docs=True,
+  config = rx.Config(app_name="aslana_app", db_url=DATABASE_URL, api_docs=True...
 ```
 
 - En aslana_app.py importamos la app fastapi:
-  `from aslana_app.backend.api import fastapi_app, APIRouter`
+
+  ```from
+  app = rx.App(api_transformer=fastapi_app)```
+
+  ```
 - En este caso tenemos en api.py:
 
   ```
   from fastapi import FastAPI, APIRouter
-  # Interfaz Swagger UI
+  # Instanciamos FastAPI. Interfaz Swagger UI.
   fastapi_app = FastAPI(...)
 
   @api_router.get("/health") con la función def api_health...

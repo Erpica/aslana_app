@@ -12,16 +12,9 @@ from .pages.index import index
 class State(rx.State):
     """The app state."""
 
-# Reflex principal:
-#app = rx.App()
+# Esto le dice a Reflex que, en lugar de su api interno use fastapi_app 
+# (que lo importo de aslana_app.backend.api)
 app = rx.App(api_transformer=fastapi_app)
-
-
-
-# Importamos la aplicación fastAPI que hemos instanciado en api.py
-#app._api.mount("/api", fastapi_app)
-#app._api.mount("/testapi", fastapi_app)
-
 
 # Página Principal
 app.add_page(

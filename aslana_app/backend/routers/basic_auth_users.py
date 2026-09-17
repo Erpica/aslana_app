@@ -1,8 +1,10 @@
-from fastapi import FastAPI, Depends, HTTPException, status
+from fastapi import FastAPI, Depends, HTTPException, status, APIRouter
 from pydantic import BaseModel
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 
-app = FastAPI()
+#app = FastAPI()
+router_app = APIRouter(tags=["Basic auth"])
+
 
 oauth2 = OAuth2PasswordBearer(tokenUrl="login")
 
@@ -56,7 +58,7 @@ async def current_user(token: str = Depends(oauth2)):
 
 
 
-@app.post("/login")
+@router_app.post("/login_basic")
 async def login(form: OAuth2PasswordRequestForm = Depends()):
     user_db = users_db.get(form.username)
     if not user_db:
@@ -66,7 +68,7 @@ async def login(form: OAuth2PasswordRequestForm = Depends()):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Ususario o contraseña incorrecta")
     return {"access_token": form.username, "token_type": "bearer"}
 
-@app.get("/users/me")
+@router_app.get("/users/me_basic")
 async def me(user: User = Depends(current_user)):
     return user
 
