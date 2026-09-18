@@ -1,2 +1,9 @@
-
-reflex==0.9.10.post1
+fastapi[standard]
+reflex
+pymongo
+python-dotenv
+sqlmodel
+python-jose
+passlib
+bcrypt
+dnspython

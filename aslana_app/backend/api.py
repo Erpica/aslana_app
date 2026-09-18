@@ -58,3 +58,5 @@ fastapi_app.include_router(jwt_auth_users.api_router)
 fastapi_app.include_router(api_router)
 #fastapi_app.include_router(prueba.router_app)
 fastapi_app.include_router(users_db.router_app)
+
+app = fastapi_app

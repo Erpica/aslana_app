@@ -1,0 +1,14 @@
+{
+  "builds": [
+    {
+      "src": "aslana_app/backend/api.py",
+      "use": "@vercel/python"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "aslana_app/backend/api.py"
+    }
+  ]
+}
