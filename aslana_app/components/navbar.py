@@ -14,9 +14,9 @@ def navbar() -> rx.Component:
                 href="/"
             ),
             rx.hstack(
-                navbar_link("Niños", ""),
-                navbar_link("Actividades", ""),
-                navbar_link("Admin", "http://localhost:3000/admin"),
+                navbar_link("Niños", "/"),
+                navbar_link("Actividades", "/actividades"),
+                navbar_link("Admin", "/admin"),
                 spacing="5",
             ),
             justify="between",  # Empuja la imagen a la izquierda y el hstack de enlaces a la derecha
