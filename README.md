@@ -100,7 +100,6 @@ Empezamos con la estructura por defecto que crea reflex con algunas modificacion
 
   ```from
   app = rx.App(api_transformer=fastapi_app)```
-
   ```
 - En este caso tenemos en api.py:
 
@@ -115,12 +114,24 @@ Empezamos con la estructura por defecto que crea reflex con algunas modificacion
   accesible en `http://localhost:8000/health`
 - Levanta los servidores.
 
+## Comprobaciones para el Backend:
+- uv pip install --upgrade reflex
+- reflex login
+- reflex deploy
+- reflex cloud apps list
+- reflex cloud secrets list {project_id}
+- reflex cloud apps logs {app_id}
+- reflex cloud apps inspect {app_id}
+- reflex cloud apps build-logs {app_id}
+
+
 ## Notas varias:
 
 - Para hacer un tree sin "archivos basura" podemos ejecutar:
   `tree -I "__pycache__|*.pyc|.git|.venv|node_modules"`
 
 ## Tareas pendientes:
+- Ver Google Cloud Platform (GCP).
 
 - Familiarizarme con
 
