@@ -1,6 +1,6 @@
 import reflex as rx
 from aslana_app.backend.models import Child, ExtracurricularActivity, ChildActivityLink
-from sqlmodel import select
+from sqlmodel import select, SQLModel  # <--- 1. Importado SQLModel
 import json
 from typing import List
 
@@ -53,8 +53,13 @@ class ScheduleState(rx.State):
     def set_new_child_input(self, value: str):
         self.new_child_input = value
 
+    def create_tables(self):
+        """Crea las tablas en la base de datos si aún no existen."""
+        SQLModel.metadata.create_all(rx.Model.get_engine())
+
     def load_children(self):
         """Carga los niños desde la base de datos."""
+        self.create_tables()  # <--- 2. Asegura la creación de tablas
         with rx.session() as session:
             results = session.exec(select(Child)).all()
             # Si no hay niños por defecto, creamos Anto y Alba
@@ -85,7 +90,6 @@ class ScheduleState(rx.State):
     def remove_child_option(self, child_dict: dict):
         """Elimina un niño de la base de datos de forma permanente."""
         try:
-            # Extraemos el id y el nombre de forma segura del diccionario
             c_id = int(child_dict.get("id"))
             c_name = child_dict.get("name")
         except (TypeError, ValueError, AttributeError):
@@ -141,7 +145,6 @@ class ScheduleState(rx.State):
             for minute in (0, 30):
                 slots.append(f"{hour:02d}:{minute:02d}")
 
-        # Ocultar 15:00 si ninguna actividad cae en ese tramo
         has_1500_activity = any(item.get("slot") == "15:00" for item in self.activities)
         if not has_1500_activity and slots and slots[0] == "15:00":
             slots.pop(0)
@@ -162,7 +165,6 @@ class ScheduleState(rx.State):
             results = session.exec(select(ExtracurricularActivity)).all()
             data = []
             for item in results:
-                # Extraemos los datos de forma segura del modelo SQLModel
                 activity_dict = {
                     "id": item.id,
                     "activity_name": item.activity_name,
@@ -171,7 +173,6 @@ class ScheduleState(rx.State):
                     "slot": self.get_slot_for_time(item.start_time)
                 }
                 
-                # Deserialización y formato de child_name
                 raw_child = item.child_name
                 child_list = ["Anto"]
                 if raw_child:
@@ -183,7 +184,6 @@ class ScheduleState(rx.State):
                 activity_dict["child_name"] = child_list
                 activity_dict["child_formatted"] = format_list_py(child_list)
 
-                # Deserialización y formato de day_of_week
                 raw_day = item.day_of_week
                 day_list = ["Lunes"]
                 if raw_day:
