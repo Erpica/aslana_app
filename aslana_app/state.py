@@ -55,7 +55,8 @@ class ScheduleState(rx.State):
 
     def create_tables(self):
         """Crea las tablas en la base de datos si aún no existen."""
-        SQLModel.metadata.create_all(rx.Model.get_engine())
+        # Cambiar get_engine() por get_db_engine()
+        SQLModel.metadata.create_all(rx.Model.get_db_engine())
 
     def load_children(self):
         """Carga los niños desde la base de datos."""
