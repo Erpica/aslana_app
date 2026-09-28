@@ -3,7 +3,6 @@ alembic==1.19.1
 annotated-doc==0.0.5
 annotated-types==0.8.0
 anyio==4.15.1
--e git+ssh://git@github.com/Erpica/aslana_app.git@e4def9d70d3556bb92a6bc14c78950ba8078c646#egg=aslana_app
 bcrypt==5.0.0
 bidict==0.24.1
 certifi==2026.7.22
