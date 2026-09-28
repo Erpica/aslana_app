@@ -78,7 +78,7 @@ def hero() -> rx.Component:
                 # --- TÍTULO SUPERIOR ---
                 rx.vstack(
                     rx.heading(
-                        "Bienvenido a Aslana",
+                        "Bienvenido a Aslana - prueba",
                         size="8",
                         weight="bold",
                         color=styles.Color.DARK.value,
