@@ -20,3 +20,5 @@ __pycache__/
 *.py[cod]
 .venv/
 
+# Archivo obsoleto, se mantiene solo por si necesito recuperar algo:
+basic_auth_users.py.old
