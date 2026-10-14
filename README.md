@@ -115,6 +115,7 @@ Empezamos con la estructura por defecto que crea reflex con algunas modificacion
 - Levanta los servidores.
 
 ## Comprobaciones para el Backend:
+
 - uv pip install --upgrade reflex
 - reflex login
 - reflex deploy
@@ -124,15 +125,14 @@ Empezamos con la estructura por defecto que crea reflex con algunas modificacion
 - reflex cloud apps inspect {app_id}
 - reflex cloud apps build-logs {app_id}
 
-
 ## Notas varias:
 
 - Para hacer un tree sin "archivos basura" podemos ejecutar:
   `tree -I "__pycache__|*.pyc|.git|.venv|node_modules"`
 
 ## Tareas pendientes:
-- Ver Google Cloud Platform (GCP).
 
+- Ver Google Cloud Platform (GCP).
 - Familiarizarme con
 
   - Swagger (o Redoc)

@@ -19,47 +19,52 @@ def login_form() -> rx.Component:
             align="center",
         ),
         rx.card(
-            rx.vstack(
+            # Envolvemos el contenido con rx.form para capturar el 'Enter'
+            rx.form(
                 rx.vstack(
-                    rx.text("Usuario", size="2", weight="bold"),
-                    rx.input(
-                        placeholder="Introduce tu usuario",
-                        value=AuthState.username_input,
-                        on_change=AuthState.set_username_input,
+                    rx.vstack(
+                        rx.text("Usuario", size="2", weight="bold"),
+                        rx.input(
+                            placeholder="Introduce tu usuario",
+                            value=AuthState.username_input,
+                            on_change=AuthState.set_username_input,
+                            width="100%",
+                        ),
                         width="100%",
+                        spacing="1",
                     ),
-                    width="100%",
-                    spacing="1",
-                ),
-                rx.vstack(
-                    rx.text("Contraseña", size="2", weight="bold"),
-                    rx.input(
-                        placeholder="Introduce tu contraseña",
-                        type="password",
-                        value=AuthState.password_input,
-                        on_change=AuthState.set_password_input,
+                    rx.vstack(
+                        rx.text("Contraseña", size="2", weight="bold"),
+                        rx.input(
+                            placeholder="Introduce tu contraseña",
+                            type="password",
+                            value=AuthState.password_input,
+                            on_change=AuthState.set_password_input,
+                            width="100%",
+                        ),
                         width="100%",
+                        spacing="1",
                     ),
-                    width="100%",
-                    spacing="1",
-                ),
-                rx.cond(
-                    AuthState.error_message != "",
-                    rx.callout(
-                        AuthState.error_message,
-                        icon="triangle_alert",
-                        color_scheme="red",
+                    rx.cond(
+                        AuthState.error_message != "",
+                        rx.callout(
+                            AuthState.error_message,
+                            icon="triangle_alert",
+                            color_scheme="red",
+                            width="100%",
+                        ),
+                    ),
+                    rx.button(
+                        "Iniciar Sesión",
+                        type="submit",  # Tipo submit para que se active al presionar Enter
                         width="100%",
+                        color_scheme="indigo",
+                        cursor="pointer",
                     ),
-                ),
-                rx.button(
-                    "Iniciar Sesión",
-                    on_click=AuthState.login_action,
+                    spacing="4",
                     width="100%",
-                    color_scheme="indigo",
-                    cursor="pointer",
                 ),
-                spacing="4",
+                on_submit=AuthState.login_action,
                 width="100%",
             ),
             width="100%",
