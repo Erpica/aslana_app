@@ -1,8 +1,8 @@
-import reflex as rx
-from aslana_app.backend.models import Child, ExtracurricularActivity, ChildActivityLink
-from sqlmodel import select, SQLModel  # <--- 1. Importado SQLModel
 import json
 from typing import List
+import reflex as rx
+from aslana_app.backend.db.client import db_client
+
 
 def format_list_py(items) -> str:
     """Convierte una lista en un string con comas y 'y' antes del último elemento."""
@@ -17,7 +17,7 @@ def format_list_py(items) -> str:
                 return items
         except Exception:
             return items
-            
+
     if len(items) == 1:
         return items[0]
     elif len(items) == 2:
@@ -29,14 +29,14 @@ def format_list_py(items) -> str:
 class ScheduleState(rx.State):
     days: list[str] = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes"]
     activities: list[dict] = []
-    
-    # Lista de objetos niño desde la BD
+
+    # Lista de objetos niño desde MongoDB
     available_children: list[dict] = []
-    new_child_input: str = "" 
+    new_child_input: str = ""
 
     form_id: int | None = None
     activity_name: str = ""
-    child_name: list[str] = []  
+    child_name: list[str] = []
     day_of_week: list[str] = []
     start_time: str = "17:00"
     end_time: str = "18:00"
@@ -53,58 +53,51 @@ class ScheduleState(rx.State):
     def set_new_child_input(self, value: str):
         self.new_child_input = value
 
-    def create_tables(self):
-        """Crea las tablas en la base de datos si aún no existen."""
-        # Cambiar get_engine() por get_db_engine()
-        SQLModel.metadata.create_all(rx.Model.get_db_engine())
-
     def load_children(self):
-        """Carga los niños desde la base de datos."""
-        self.create_tables()  # <--- 2. Asegura la creación de tablas
-        with rx.session() as session:
-            results = session.exec(select(Child)).all()
-            # Si no hay niños por defecto, creamos Anto y Alba
-            if not results:
-                default_children = [Child(name="Anto"), Child(name="Alba")]
-                session.add_all(default_children)
-                session.commit()
-                results = session.exec(select(Child)).all()
-            
-            self.available_children = [{"id": c.id, "name": c.name} for c in results]
+        """Carga los niños desde MongoDB Atlas."""
+        try:
+            children_docs = list(db_client.children.find())
+            if not children_docs:
+                default_children = [{"id": 1, "name": "Anto"}, {"id": 2, "name": "Alba"}]
+                db_client.children.insert_many(default_children)
+                children_docs = list(db_client.children.find())
+
+            self.available_children = [
+                {"id": str(c.get("id", c.get("_id"))), "name": c["name"]}
+                for c in children_docs
+            ]
+        except Exception as e:
+            print(f"Error al cargar niños desde MongoDB: {e}")
+            self.available_children = []
 
     def add_child_option(self):
-        """Añade un niño nuevo a la base de datos."""
+        """Añade un niño nuevo a MongoDB Atlas."""
         name = self.new_child_input.strip()
         if not name:
             return
-            
-        with rx.session() as session:
-            existing = session.exec(select(Child).where(Child.name == name)).first()
+
+        try:
+            existing = db_client.children.find_one({"name": name})
             if not existing:
-                new_c = Child(name=name)
-                session.add(new_c)
-                session.commit()
-                
+                new_id = db_client.children.count_documents({}) + 1
+                db_client.children.insert_one({"id": new_id, "name": name})
+        except Exception as e:
+            print(f"Error al añadir niño en MongoDB: {e}")
+
         self.new_child_input = ""
         self.load_children()
 
     def remove_child_option(self, child_dict: dict):
-        """Elimina un niño de la base de datos de forma permanente."""
+        """Elimina un niño de MongoDB Atlas."""
         try:
-            c_id = int(child_dict.get("id"))
             c_name = child_dict.get("name")
-        except (TypeError, ValueError, AttributeError):
-            return
+            if c_name:
+                db_client.children.delete_one({"name": c_name})
+                if c_name in self.child_name:
+                    self.child_name.remove(c_name)
+        except Exception as e:
+            print(f"Error al eliminar niño de MongoDB: {e}")
 
-        with rx.session() as session:
-            child = session.get(Child, c_id)
-            if child:
-                session.delete(child)
-                session.commit()
-                
-        if c_name and c_name in self.child_name:
-            self.child_name.remove(c_name)
-            
         self.load_children()
         self.load_activities()
 
@@ -127,7 +120,7 @@ class ScheduleState(rx.State):
     @rx.var
     def activities_by_day_and_time(self) -> dict[str, dict[str, list[dict]]]:
         result = {
-            day: {slot: [] for slot in self.time_slots} 
+            day: {slot: [] for slot in self.time_slots}
             for day in self.days
         }
 
@@ -161,94 +154,112 @@ class ScheduleState(rx.State):
             return time_str
 
     def load_activities(self):
+        """Carga la lista de actividades desde MongoDB Atlas."""
         self.load_children()
-        with rx.session() as session:
-            results = session.exec(select(ExtracurricularActivity)).all()
+        try:
+            docs = list(db_client.extracurricularactivities.find())
             data = []
-            for item in results:
+            for item in docs:
                 activity_dict = {
-                    "id": item.id,
-                    "activity_name": item.activity_name,
-                    "start_time": item.start_time,
-                    "end_time": item.end_time,
-                    "slot": self.get_slot_for_time(item.start_time)
+                    "id": item.get("id", str(item.get("_id"))),
+                    "activity_name": item.get("activity_name", ""),
+                    "start_time": item.get("start_time", "17:00"),
+                    "end_time": item.get("end_time", "18:00"),
+                    "slot": self.get_slot_for_time(item.get("start_time", "17:00"))
                 }
-                
-                raw_child = item.child_name
+
+                raw_child = item.get("child_name")
                 child_list = ["Anto"]
                 if raw_child:
-                    try:
-                        parsed_child = json.loads(raw_child)
-                        child_list = parsed_child if isinstance(parsed_child, list) else [str(parsed_child)]
-                    except (json.JSONDecodeError, TypeError):
-                        child_list = [raw_child]
+                    if isinstance(raw_child, list):
+                        child_list = raw_child
+                    else:
+                        try:
+                            parsed_child = json.loads(raw_child)
+                            child_list = parsed_child if isinstance(parsed_child, list) else [str(parsed_child)]
+                        except (json.JSONDecodeError, TypeError):
+                            child_list = [raw_child]
                 activity_dict["child_name"] = child_list
                 activity_dict["child_formatted"] = format_list_py(child_list)
 
-                raw_day = item.day_of_week
+                raw_day = item.get("day_of_week")
                 day_list = ["Lunes"]
                 if raw_day:
-                    try:
-                        parsed_day = json.loads(raw_day)
-                        day_list = parsed_day if isinstance(parsed_day, list) else [str(parsed_day)]
-                    except (json.JSONDecodeError, TypeError):
-                        day_list = [raw_day]
+                    if isinstance(raw_day, list):
+                        day_list = raw_day
+                    else:
+                        try:
+                            parsed_day = json.loads(raw_day)
+                            day_list = parsed_day if isinstance(parsed_day, list) else [str(parsed_day)]
+                        except (json.JSONDecodeError, TypeError):
+                            day_list = [raw_day]
                 activity_dict["day_of_week"] = day_list
                 activity_dict["day_formatted"] = format_list_py(day_list)
 
                 data.append(activity_dict)
             self.activities = data
+        except Exception as e:
+            print(f"Error al cargar actividades desde MongoDB: {e}")
+            self.activities = []
 
     def seed_sample_data(self):
         self.load_activities()
 
     def save_activity(self):
+        """Guarda o actualiza una actividad en MongoDB Atlas."""
         if not self.activity_name or not self.child_name:
             return
 
-        with rx.session() as session:
+        try:
             if self.form_id is not None:
-                item = session.get(ExtracurricularActivity, self.form_id)
-                if item:
-                    item.activity_name = self.activity_name
-                    item.child_name = json.dumps(self.child_name)
-                    item.day_of_week = json.dumps(self.day_of_week)
-                    item.start_time = self.start_time
-                    item.end_time = self.end_time
-                    session.add(item)
-            else:
-                new_item = ExtracurricularActivity(
-                    activity_name=self.activity_name,
-                    child_name=json.dumps(self.child_name),
-                    day_of_week=json.dumps(self.day_of_week),
-                    start_time=self.start_time,
-                    end_time=self.end_time,
+                db_client.extracurricularactivities.update_one(
+                    {"id": self.form_id},
+                    {
+                        "$set": {
+                            "activity_name": self.activity_name,
+                            "child_name": json.dumps(self.child_name),
+                            "day_of_week": json.dumps(self.day_of_week),
+                            "start_time": self.start_time,
+                            "end_time": self.end_time,
+                        }
+                    }
                 )
-                session.add(new_item)
-            session.commit()
-            
+            else:
+                new_id = db_client.extracurricularactivities.count_documents({}) + 10
+                new_doc = {
+                    "id": new_id,
+                    "activity_name": self.activity_name,
+                    "child_name": json.dumps(self.child_name),
+                    "day_of_week": json.dumps(self.day_of_week),
+                    "start_time": self.start_time,
+                    "end_time": self.end_time,
+                }
+                db_client.extracurricularactivities.insert_one(new_doc)
+        except Exception as e:
+            print(f"Error al guardar actividad en MongoDB: {e}")
+
         self.reset_form()
         self.load_activities()
 
     def edit_activity(self, activity: dict):
         self.form_id = activity.get("id")
         self.activity_name = activity.get("activity_name", "")
-        
+
         c_name = activity.get("child_name", ["Anto"])
         self.child_name = c_name if isinstance(c_name, list) else [c_name]
-        
+
         dow = activity.get("day_of_week", ["Lunes"])
         self.day_of_week = dow if isinstance(dow, list) else [dow]
-        
+
         self.start_time = activity.get("start_time", "17:00")
         self.end_time = activity.get("end_time", "18:00")
 
-    def delete_activity(self, activity_id: int):
-        with rx.session() as session:
-            item = session.get(ExtracurricularActivity, activity_id)
-            if item:
-                session.delete(item)
-                session.commit()
+    def delete_activity(self, activity_id):
+        """Elimina una actividad de MongoDB Atlas."""
+        try:
+            db_client.extracurricularactivities.delete_one({"id": activity_id})
+        except Exception as e:
+            print(f"Error al borrar actividad en MongoDB: {e}")
         self.load_activities()
 
     def reset_form(self):

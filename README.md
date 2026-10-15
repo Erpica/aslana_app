@@ -138,3 +138,6 @@ Empezamos con la estructura por defecto que crea reflex con algunas modificacion
   - Swagger (o Redoc)
   - Postman
 - Ver la clase principal de Pydantic: basemodel (validación y conversión automática)
+- 15/10 - mirar en deepseek:
+  Configura Redis para persistir el estado (solución robusta)
+
